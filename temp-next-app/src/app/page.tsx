@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import ModelConfigForm from '@/components/llm/ModelConfigForm';
 import ChatInterface from '@/components/llm/ChatInterface';
 import ModelStatus from '@/components/llm/ModelStatus';
@@ -10,13 +10,14 @@ export default function Home() {
   const [config, setConfig] = useState<ModelConfig>(defaultModelConfig);
   const [status, setStatus] = useState<ModelStatusType>({ isLoading: false });
 
-  const handleConfigChange = (newConfig: ModelConfig) => {
+  // Memoize callback functions to prevent recreation on each render
+  const handleConfigChange = useCallback((newConfig: ModelConfig) => {
     setConfig(newConfig);
-  };
+  }, []);
 
-  const handleStatusChange = (newStatus: ModelStatusType) => {
+  const handleStatusChange = useCallback((newStatus: ModelStatusType) => {
     setStatus(newStatus);
-  };
+  }, []);
 
   return (
     <div className="space-y-6">

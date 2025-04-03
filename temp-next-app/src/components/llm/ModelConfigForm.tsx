@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useMemo, useCallback } from 'react';
 import * as webllm from '@mlc-ai/web-llm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
@@ -16,11 +16,11 @@ interface ModelRecord {
   model_id: string;
 }
 
-export default function ModelConfigForm({ 
+const ModelConfigForm = ({ 
   onConfigChange 
 }: { 
   onConfigChange: (config: ModelConfig) => void 
-}) {
+}) => {
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [storedConfig, setStoredConfig] = useLocalStorage<ModelConfig>(
@@ -28,9 +28,22 @@ export default function ModelConfigForm({
     defaultModelConfig
   );
 
+  // Memoize form default values to prevent re-render triggers
+  const defaultValues = useMemo(() => storedConfig, [storedConfig]);
+  
   const form = useForm<ModelConfig>({
-    defaultValues: storedConfig,
+    defaultValues,
   });
+
+  // Update form when storedConfig changes, but without causing re-renders
+  useEffect(() => {
+    form.reset(storedConfig);
+  }, [storedConfig, form]);
+
+  // Memoize model list for performance
+  const sortedAvailableModels = useMemo(() => {
+    return [...availableModels].sort();
+  }, [availableModels]);
 
   useEffect(() => {
     // On mount, get available models from web-llm
@@ -70,7 +83,8 @@ export default function ModelConfigForm({
     fetchModels();
   }, []);
 
-  const onSubmit = (data: ModelConfig) => {
+  // Memoize onSubmit function to prevent unnecessary re-renders
+  const onSubmit = useCallback((data: ModelConfig) => {
     setIsLoading(true);
     
     // Save to local storage
@@ -80,7 +94,7 @@ export default function ModelConfigForm({
     onConfigChange(data);
     
     setIsLoading(false);
-  };
+  }, [onConfigChange, setStoredConfig]);
 
   return (
     <Card className="w-full">
@@ -101,7 +115,8 @@ export default function ModelConfigForm({
                   <FormLabel className="text-sm md:text-base">Model</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
-                    defaultValue={field.value}
+                    value={field.value}
+                    disabled={isLoading}
                   >
                     <FormControl>
                       <SelectTrigger className="text-sm md:text-base">
@@ -109,7 +124,7 @@ export default function ModelConfigForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {availableModels.map((model) => (
+                      {sortedAvailableModels.map((model) => (
                         <SelectItem key={model} value={model} className="text-sm md:text-base">
                           {model}
                         </SelectItem>
@@ -137,6 +152,7 @@ export default function ModelConfigForm({
                         min="0"
                         max="2"
                         className="text-sm md:text-base"
+                        disabled={isLoading}
                         {...field}
                         onChange={e => field.onChange(parseFloat(e.target.value))}
                       />
@@ -161,6 +177,7 @@ export default function ModelConfigForm({
                         min="100"
                         max="4096"
                         className="text-sm md:text-base"
+                        disabled={isLoading}
                         {...field}
                         onChange={e => field.onChange(parseInt(e.target.value))}
                       />
@@ -185,6 +202,7 @@ export default function ModelConfigForm({
                         min="0"
                         max="1"
                         className="text-sm md:text-base"
+                        disabled={isLoading}
                         {...field}
                         onChange={e => field.onChange(parseFloat(e.target.value))}
                       />
@@ -209,6 +227,7 @@ export default function ModelConfigForm({
                         min="1"
                         max="2"
                         className="text-sm md:text-base"
+                        disabled={isLoading}
                         {...field}
                         onChange={e => field.onChange(parseFloat(e.target.value))}
                       />
@@ -229,4 +248,6 @@ export default function ModelConfigForm({
       </CardContent>
     </Card>
   );
-}
+};
+
+export default memo(ModelConfigForm);

@@ -1,9 +1,10 @@
 'use client';
 
+import { memo } from 'react';
 import { Card, CardContent, CardDescription } from '@/components/ui/card';
 import { ModelStatus as ModelStatusType } from '@/types/llm';
 
-export default function ModelStatus({ status }: { status: ModelStatusType }) {
+const ModelStatus = ({ status }: { status: ModelStatusType }) => {
   if (!status.isLoading && !status.error) {
     return null;
   }
@@ -42,4 +43,6 @@ export default function ModelStatus({ status }: { status: ModelStatusType }) {
       </CardContent>
     </Card>
   );
-}
+};
+
+export default memo(ModelStatus);
