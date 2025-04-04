@@ -1,5 +1,9 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import { initializeServerLogging } from "@/lib/server-logger";
+
+// Initialize server-side logging for server components
+initializeServerLogging();
 
 export const metadata: Metadata = {
   title: "Web-LLM Test App",
