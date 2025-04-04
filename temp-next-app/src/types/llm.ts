@@ -4,6 +4,7 @@ export interface ModelConfig {
   maxTokens?: number;
   topP?: number;
   repetitionPenalty?: number;
+  logLevel?: string; // Added log level for logging configuration
 }
 
 export interface ChatMessage {
@@ -23,4 +24,5 @@ export const defaultModelConfig: ModelConfig = {
   maxTokens: 800,
   topP: 0.9,
   repetitionPenalty: 1.1,
+  logLevel: '3', // INFO level by default
 };

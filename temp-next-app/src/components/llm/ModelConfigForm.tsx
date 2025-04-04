@@ -10,11 +10,24 @@ import { Button } from '@/components/ui/button';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { ModelConfig, defaultModelConfig } from '@/types/llm';
 import { useForm } from 'react-hook-form';
+import { Logger, LogLevel } from '@/lib/logger';
 
 // Using a more general type that doesn't require an index signature
 interface ModelRecord {
   model_id: string;
 }
+
+// Log level options for the selector
+const logLevelOptions = [
+  { value: '1', label: 'Error Only' },
+  { value: '2', label: 'Warning' },
+  { value: '3', label: 'Info' },
+  { value: '4', label: 'Debug' },
+  { value: '5', label: 'Trace' }
+];
+
+// Create a component logger
+const logger = Logger.getLogger('ModelConfigForm');
 
 const ModelConfigForm = ({ 
   onConfigChange 
@@ -39,6 +52,20 @@ const ModelConfigForm = ({
   useEffect(() => {
     form.reset(storedConfig);
   }, [storedConfig, form]);
+
+  // Configure logger when log level changes
+  useEffect(() => {
+    if (storedConfig.logLevel) {
+      const numLevel = parseInt(storedConfig.logLevel);
+      if (!isNaN(numLevel)) {
+        logger.debug(`Setting client log level to ${LogLevel[numLevel]}`);
+        Logger.configure({
+          minLevel: numLevel as LogLevel,
+          componentLevels: {}
+        });
+      }
+    }
+  }, [storedConfig.logLevel]);
 
   // Memoize model list for performance
   const sortedAvailableModels = useMemo(() => {
@@ -68,7 +95,7 @@ const ModelConfigForm = ({
           setAvailableModels(modelIds);
         }
       } catch (error) {
-        console.error('Error fetching models:', error);
+        logger.error('Error fetching models', { error });
         // Fallback to default models
         setAvailableModels([
           'Llama-3.1-8B-Instruct-q4f32_1-MLC',
@@ -94,6 +121,13 @@ const ModelConfigForm = ({
     onConfigChange(data);
     
     setIsLoading(false);
+    
+    // Log the new configuration
+    logger.info('Model configuration updated', { 
+      modelId: data.modelId,
+      temperature: data.temperature,
+      logLevel: data.logLevel
+    });
   }, [onConfigChange, setStoredConfig]);
 
   return (
@@ -239,6 +273,38 @@ const ModelConfigForm = ({
                 )}
               />
             </div>
+            
+            {/* Add Log Level Selector */}
+            <FormField
+              control={form.control}
+              name="logLevel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm md:text-base">Log Level</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    value={field.value}
+                    disabled={isLoading}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="text-sm md:text-base">
+                        <SelectValue placeholder="Select log level" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {logLevelOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value} className="text-sm md:text-base">
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription className="text-xs md:text-sm">
+                    Control the detail level of application logs
+                  </FormDescription>
+                </FormItem>
+              )}
+            />
             
             <Button type="submit" className="w-full mt-6" disabled={isLoading}>
               {isLoading ? 'Applying...' : 'Apply Configuration'}
