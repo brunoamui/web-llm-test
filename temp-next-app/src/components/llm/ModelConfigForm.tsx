@@ -19,11 +19,11 @@ interface ModelRecord {
 
 // Log level options for the selector
 const logLevelOptions = [
-  { value: '1', label: 'Error Only' },
-  { value: '2', label: 'Warning' },
-  { value: '3', label: 'Info' },
-  { value: '4', label: 'Debug' },
-  { value: '5', label: 'Trace' }
+  { value: LogLevel.ERROR.toString(), label: 'Error Only' },
+  { value: LogLevel.WARN.toString(), label: 'Warning' },
+  { value: LogLevel.INFO.toString(), label: 'Info' },
+  { value: LogLevel.DEBUG.toString(), label: 'Debug' },
+  { value: LogLevel.TRACE.toString(), label: 'Trace' }
 ];
 
 // Create a component logger
@@ -58,7 +58,8 @@ const ModelConfigForm = ({
     if (storedConfig.logLevel) {
       const numLevel = parseInt(storedConfig.logLevel);
       if (!isNaN(numLevel)) {
-        logger.debug(`Setting client log level to ${LogLevel[numLevel]}`);
+        // We don't need to use LogLevel[numLevel] since it's already a numeric enum
+        logger.debug(`Setting client log level to ${numLevel}`);
         Logger.configure({
           minLevel: numLevel as LogLevel,
           componentLevels: {}

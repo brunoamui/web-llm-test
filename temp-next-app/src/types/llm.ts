@@ -14,6 +14,7 @@ export interface ChatMessage {
 
 export interface ModelStatus {
   isLoading: boolean;
+  isReady?: boolean; // Added isReady flag
   progress?: number;
   error?: string;
 }

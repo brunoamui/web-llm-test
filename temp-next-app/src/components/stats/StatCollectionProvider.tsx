@@ -209,8 +209,11 @@ export function StatCollectionProvider({
     // Get token counts from model stats
     const { prefillTokens, decodingTokens } = modelStats.tokenStats;
     
-    // Only update if values are meaningful
-    if (prefillTokens > 0 || decodingTokens > 0) {
+    // Only update if values are meaningful AND different from current values
+    if ((prefillTokens > 0 || decodingTokens > 0) && 
+        (prefillTokens > currentSession.totalPromptTokens || 
+         decodingTokens > currentSession.totalCompletionTokens)) {
+      
       logger.debug("Updating from model stats", { 
         prefillTokens, 
         decodingTokens,
@@ -221,6 +224,12 @@ export function StatCollectionProvider({
       setCurrentSession(prev => {
         if (!prev) return null;
         
+        // Only update if the new values are actually different
+        if (prefillTokens <= prev.totalPromptTokens && 
+            decodingTokens <= prev.totalCompletionTokens) {
+          return prev; // Return the same object to prevent re-render
+        }
+        
         return {
           ...prev,
           totalPromptTokens: Math.max(prev.totalPromptTokens, prefillTokens),
@@ -228,7 +237,7 @@ export function StatCollectionProvider({
         };
       });
     }
-  }, [modelStats, currentSession]);
+  }, [currentSession, modelStats]);
   
   // Calculate aggregated statistics
   const aggregatedStats = {
