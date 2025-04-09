@@ -546,6 +546,16 @@ const ChatInterface = ({
               placeholder={modelReady ? "Type your message..." : "Waiting for model to initialize..."}
               className="resize-none min-h-24 sm:min-h-0"
               disabled={!engine || !modelReady || isGenerating}
+              onKeyDown={(e) => {
+                // Submit on Enter without Shift key
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault(); // Prevent default to avoid adding a new line
+                  if (input.trim() && engine && modelReady && !isGenerating) {
+                    handleSubmit(e);
+                  }
+                }
+                // Let Shift+Enter create a new line (default behavior)
+              }}
             />
             <Button 
               type="submit" 
